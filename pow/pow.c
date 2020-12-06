@@ -44,7 +44,7 @@ double my_pow(double base, int iexp)
          "fmulp;"
          : "=t"(res)
          : "0"(pos_base), "u"((double)iexp)
-         : "st(1)");
+         : "st(1)", "st(7)");
 
 #else
 
