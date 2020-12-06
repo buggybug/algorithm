@@ -16,23 +16,41 @@
 // input parameters and just a top of the stack is used (to store the result
 // value)
 
+#include <math.h>
+
 double my_pow(double base, int iexp)
 {
+    const double pos_base = fabs(base);
     double res;
+
+#if defined(__i386__) || defined(__amd64__)
 
     asm ("fyl2x;"
          "fld1;"
-	 "fscale;"
-	 "fxch %%st(1);"
-	 "fld1;"
-	 "fxch %%st(1);"
-	 "fprem;"
-	 "f2xm1;"
-	 "faddp;"
-	 "fmulp;"
-	 : "=t"(res)
-	 : "0"(base), "u"((double)iexp)
-	 : "st(1)");
+         "fscale;"
+         "fxch %%st(1);"
+         "fld1;"
+         "fxch %%st(1);"
+         "fprem;"
+         "f2xm1;"
+         "faddp;"
+         "fmulp;"
+         : "=t"(res)
+         : "0"(pos_base), "u"((double)iexp)
+         : "st(1)");
+
+#else
+
+    // C library does not provide fyl2x equivalent
+    const long double exp_arg = iexp * log2l(pos_base);
+
+    res = (double)(ldexpl(1.0, (int)floorl(exp_arg)) *
+                   exp2l(fmodl(exp_arg, 1.0)));
+
+#endif // defined(__i386__) || defined(__amd64__)
+
+    if ((base < 0) && (iexp & 1))
+        res *= -1;
 
     return res;
 }
