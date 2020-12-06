@@ -18,12 +18,19 @@
 
 #include <math.h>
 
+// Assembly implementation provided for GCC only
+#ifdef __GNUC__
+#if defined(__i386__) || defined(__amd64__)
+#define MY_POW_FPU_IMPL 1
+#endif // defined(__i386__) || defined(__amd64__)
+#endif // __GNUC__
+
 double my_pow(double base, int iexp)
 {
     const double pos_base = fabs(base);
     double res;
 
-#if defined(__i386__) || defined(__amd64__)
+#ifdef MY_POW_FPU_IMPL
 
     asm ("fyl2x;"
          "fld1;"
@@ -47,7 +54,7 @@ double my_pow(double base, int iexp)
     res = (double)(ldexpl(1.0, (int)floorl(exp_arg)) *
                    exp2l(fmodl(exp_arg, 1.0)));
 
-#endif // defined(__i386__) || defined(__amd64__)
+#endif // MY_POW_FPU_IMPL
 
     if ((base < 0) && (iexp & 1))
         res *= -1;
